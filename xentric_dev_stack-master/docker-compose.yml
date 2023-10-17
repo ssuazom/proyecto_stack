@@ -1,0 +1,44 @@
+version: "2.4"
+
+services:
+  mongo:
+    image: mongo:5.0
+    restart: always
+    hostname: mongo
+    container_name: mongo
+    #mem_limit: 256m
+    #cpus: 1
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=supersecurePass1
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb:/data/db
+      - mongodb_config:/data/configdb
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:19.0
+    hostname: keycloak
+    container_name: keycloak
+    restart: unless-stopped
+    volumes:
+      - ./themes/custom:/opt/keycloak/themes/autoenrollment
+      - ./keycloak/export:/opt/keycloak/data/import
+      - ./keycloak/db:/opt/keycloak/data/h2
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: xentric
+    ports:
+      - 8080:8080
+      - 8443:8443
+    #command: export --file=/opt/keycloak/data/import/Alloxentric.json --realm Alloxentric
+    command: start-dev -Dkeycloak.profile.feature.upload_scripts=enabled --import-realm
+
+volumes:
+  mongodb:
+  mongodb_config:
+
+networks:
+  default:
+    name: alloxentric.com
